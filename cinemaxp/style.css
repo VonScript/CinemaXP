@@ -1,0 +1,6 @@
+html,body{background-color:#e2e4e6;font-size:14px}
+.navbar{background-color:#fff;border-bottom:1px solid #e1e5eb;min-height:3.5rem;padding:0}
+.content{align: center; padding-top: 5rem; margin: 3rem; width: 80%;}
+@media (max-width: 767px){#content{margin-left:0}}
+
+/*# sourceMappingURL=style.css.map */
