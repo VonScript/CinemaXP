@@ -19,12 +19,12 @@
                 ]); ?>
 
                 <?php echo form_error('movie-rating'); ?>
-                <?php echo custom_form_input('Rating', [
-                    'name'          => 'movie-rating',
-                    'class'         => 'form-control',
-                    'placeholder'   => 'Rating',
-                    'value'         => set_value('movie-rating')
-                ]); ?>
+                <label class="text-left">Rating:</label>
+                <select name='movie-rating' class="text-left">
+                  <?php foreach($ratings as $rating): ?>
+                    <option value="<?php echo $rating['id']; ?>"><?php echo $rating['rating']; ?></option>
+                  <?php endforeach; ?>
+                </select>
 
                 <?php echo form_error('movie-actors'); ?>
                 <?php echo custom_form_input('Actors', [
@@ -58,14 +58,6 @@
                     'placeholder'   => 'Add a synopsis for this movie.',
                     'class'         => 'form-control mb-3',
                     'value'         => set_value('movie-text')
-                ]); ?>
-
-                <?php echo form_error('movie-price'); ?>
-                <?php echo custom_form_input('Ticket Price', [
-                    'name'          => 'movie-price',
-                    'class'         => 'form-control',
-                    'placeholder'   => '00.00',
-                    'value'         => set_value('movie-price')
                 ]); ?>
 
                 <?php echo form_error('movie-image'); ?>

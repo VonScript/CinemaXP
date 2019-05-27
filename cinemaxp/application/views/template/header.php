@@ -17,19 +17,15 @@
     </head>
     <body>
       <header class="navbar navbar-light align-items-stretch">
-          <h4 class="navbar-brand">CINEMA XP</h4>
-          <div class="">
+          <h2 class="navbar-brand ml-4">CINEMA XP</h2>
+          <div class="mr-4">
 <?php if($role == 1): ?>
-            <a href="<?php echo site_url('movie/index'); ?>">Home</a>
-            <a href="<?php echo site_url('movie/movielist'); ?>">Movie List</a>
+            <a href="<?php echo site_url('movie/index'); ?>" class="p-1">Home</a>
+            <a href="<?php echo site_url('movie/movielist'); ?>" class="p-1">Movie List</a>
 <?php elseif($role == 8): ?>
-            <a href="<?php echo site_url('booking/index'); ?>">Home</a>
-            <a href="<?php echo site_url('booking/bookseats'); ?>">New Booking</a>
+            <a href="<?php echo site_url('movie/index'); ?>" class="p-1">Home</a>
+            <a href="<?php echo site_url('movie/bookseats'); ?>" class="p-1">New Booking</a>
 <?php endif; ?>
-            <a href="<?php echo site_url('system/logout'); ?>">Logout</a>
+            <a href="<?php echo site_url('system/logout'); ?>" class="p-1">Logout</a>
           </div>
-
-          <a href="#sidebar" class="toggle-sidebar ml-auto d-block d-md-none border-left" data-toggle="collapse">
-              <i class="icon fas fa-arrow-left"></i>
-          </a>
       </header>

@@ -22,7 +22,7 @@ class Movie extends CXP_Controller
 	public function index()
 	{
 		$allmovies = [
-			'movies'	=> $this->movie_model->get_movies()
+			'movies'	=> $this->movie_model->get_cinema_movies()
 		];
 
 		$data = [];
@@ -31,18 +31,91 @@ class Movie extends CXP_Controller
 		foreach($allmovies as $am){
 			foreach($am as $set){
 
-			$set['text'] = read_file("{$this->text_folder}/{$set['id']}.txt");
-			$set['image'] = $this->_get_image_path($set['id']);
+			$set['text'] = read_file("{$this->text_folder}/{$set['movie_id']}.txt");
+			$set['image'] = $this->_get_image_path($set['movie_id']);
 
 			array_push($allsets, $set);
+			}
 		}
+
+		$data = [
+			'movies'	=> $allsets
+		];
+
+			$this->build('movie/index', $data);
 	}
 
-	$data = [
-		'movies'	=> $allsets
-	];
+	public function bookseats($submit = FALSE){
+		if ($submit !== FALSE)
+		{
+			return $this->_do_booking();
+		}
 
-		$this->build('movie/index', $data);
+		$this->load->library(['user_agent' => 'ua']);
+
+		$data = [
+			'movie'			=> $this->movie_model->get_cinema_movies(),
+			'showtimes'	=> $this->movie_model->get_showtimes(),
+			'columns'			=> $this->movie_model->get_columns(),
+			'rows'			=> $this->movie_model->get_rows()
+		];
+
+		$this->build('movie/bookseats', $data);
+	}
+
+	public function _do_booking(){
+		 $form_data = $this->input->post();
+		 // 1. Load the form_validation library.
+		 $this->load->library(['form_validation' => 'fv']);
+
+		 // 2. Set the validation rules.
+		 $this->fv->set_rules([
+			 [
+				 'field'	=> 'movie-viewing',
+				 'label'	=> 'Movie',
+				 'rules' => 'required'
+			 ],
+			 [
+				 'field'	=> 'movie-showtime',
+				 'label'	=> 'Showtime',
+				 'rules' => 'required'
+			 ],
+			 [
+				 'field'	=> 'movie-seats[]',
+				 'label'	=> 'Seats',
+				 'rules' => 'required'
+			 ]
+		 ]);
+
+		 // 3. If the validation failed, we'll reload.
+		 if ($this->fv->run() === FALSE)
+		 {
+			 return $this->bookseats();
+		 }
+
+		 // 4. Get the inputs from the form.
+		 $movie_id			= $this->input->post('movie-viewing');
+		 $showtime			= $this->input->post('movie-showtime');
+		 $seats 			= $this->input->post('movie-seats');
+		 $user_id			= $this->input->post('user_id');
+
+		 // 5. Try to insert the data in its tables, and get back the ID.
+		 $booking_id = $this->movie_model->create_booking($user_id, $movie_id, $showtime, $seats);
+		 if ($booking_id === FALSE)
+		 {
+			 exit("Your booking could not be completed. Please go back and try again.");
+		 }
+
+		 redirect('movie/ticket/'.$booking_id);
+	}
+
+	public function ticket($ticket_id){
+		$data = [
+			'ticket'	=> $this->movie_model->get_ticket($ticket_id),
+			'seats'		=> $this->movie_model->get_booked_seats($ticket_id)
+		];
+
+			$this->build('movie/ticket', $data);
 	}
 
 	public function create($submit = FALSE)
@@ -108,6 +181,7 @@ class Movie extends CXP_Controller
 
 		$data = [
 			'movie'		=> $movie,
+			'ratings'		=> $this->movie_model->get_ratings(),
 			'categories'	=> $this->movie_model->get_categories_array(),
 			'platform'		=> strtolower($this->ua->platform())
 		];
@@ -117,10 +191,30 @@ class Movie extends CXP_Controller
 
 	public function movielist(){
 		$data = [
-			'movies'	=> $this->movie_model->get_movies()
+			'movies'	=> $this->movie_model->get_movies(),
+			'cinemas' => $this->movie_model->get_cinemas()
 		];
 
 		$this->build('movie/movielist', $data);
+	}
+
+	public function change_cinemas(){
+			$cinema_movies = $this->input->post('cinema_movie') ?: [];
+
+			if(count($cinema_movies) > 0){
+				foreach($cinema_movies as $cm){
+					$cinema_id = substr($cm, 0, 1);
+					$movie_id = substr($cm, 1);
+					echo "Cinema : ".$cinema_id;
+					echo "Movie : ".$movie_id;
+
+					if(!$this->movie_model->assign_cinema($cinema_id, $movie_id)){
+						echo "Something went wrong. ".$cinema_id." - ".$movie_id;
+					}
+				}
+			}
+
+			redirect('movie/movielist');
 	}
 
 	public function view($slug){
@@ -189,11 +283,6 @@ class Movie extends CXP_Controller
 				'rules' => 'required|min_length[50]'
 			],
 			[
-				'field'	=> 'movie-price',
-				'label'	=> 'Ticket price',
-				'rules' => 'required'
-			],
-			[
 				'field'	=> 'movie-image',
 				'label' => 'Image',
 				'rules' => 'file_required|file_allowed_type[gif,png,jpg]'
@@ -214,7 +303,7 @@ class Movie extends CXP_Controller
 		$writers					= $this->input->post('movie-writers');
 		$directors				= $this->input->post('movie-directors');
 		$text							= $this->input->post('movie-text');
-		$price						= $this->input->post('movie-price');
+		$price						= "€6.50";
 		$categories 			= $this->input->post('movie-categories') ?: [];
 
 		// 5. Try to insert the data in its tables, and get back the ID.
@@ -279,11 +368,6 @@ class Movie extends CXP_Controller
 				'field'	=> 'movie-text',
 				'label'	=> 'Content',
 				'rules' => 'required|min_length[50]'
-			],
-			[
-				'field'	=> 'movie-price',
-				'label'	=> 'Ticket price',
-				'rules' => 'required'
 			]
 		];
 
@@ -302,7 +386,7 @@ class Movie extends CXP_Controller
 		// 3. If the validation failed, we'll reload.
 		if ($this->fv->run() === FALSE)
 		{
-			return $this->edit($movie['id']);
+			return $this->edit($movie['slug']);
 		}
 
 		// 4. Get the inputs from the form.
@@ -313,12 +397,11 @@ class Movie extends CXP_Controller
 		$writers					= $this->input->post('movie-writers');
 		$directors				= $this->input->post('movie-directors');
 		$text							= $this->input->post('movie-text');
-		$price						= $this->input->post('movie-price');
 		$categories 			= $this->input->post('movie-categories') ?: [];
 
 		// 5. Check if anything has changed in the form.
 			// change the entry in the database.
-			if (!$this->movie_model->update_movie($movie['id'], $title, $release_date, $rating, $actors, $writers, $directors, $price, $categories))
+			if (!$this->movie_model->update_movie($movie['id'], $title, $release_date, $rating, $actors, $writers, $directors))
 			{
 				exit("Your movie could not be edited. Please go back and try again.");
 			}

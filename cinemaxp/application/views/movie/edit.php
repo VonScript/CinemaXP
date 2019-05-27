@@ -1,7 +1,10 @@
-<?php echo form_open_multipart("movie/edit/{$movie['slug']}/submit", ['class' => 'row content']); ?>
+<?php
+$slug = $movie['slug'];
+echo form_open_multipart("movie/edit/{$slug}/submit"); ?>
+<div class="d-flex">
     <div class="col-12 col-lg-9">
         <div class="card">
-            <div class="card-body">
+            <div class="card-body"><?php echo "Slug: ".$movie['slug']; ?>
                 <?php echo form_error('movie-title'); ?>
                 <?php echo custom_form_input('Title', [
                     'name'          => 'movie-title',
@@ -19,12 +22,12 @@
                 ]); ?>
 
                 <?php echo form_error('movie-rating'); ?>
-                <?php echo custom_form_input('Rating', [
-                    'name'          => 'movie-rating',
-                    'class'         => 'form-control',
-                    'placeholder'   => 'Rating',
-                    'value'         => $movie['rating'] ?: set_value('movie-rating')
-                ]); ?>
+                <label class="text-left">Rating:</label>
+                <select name='movie-rating' class="text-left">
+                  <?php foreach($ratings as $rating): ?>
+                    <option value="<?php echo $rating['id']; ?> " <?php if($rating['id'] == $movie['rating']) echo "selected"; ?>><?php echo $rating['rating']; ?></option>
+                  <?php endforeach; ?>
+                </select>
 
                 <?php echo form_error('movie-actors'); ?>
                 <?php echo custom_form_input('Actors', [
@@ -60,15 +63,7 @@
                     'value'         => $movie['text'] ?: set_value('movie-text')
                 ]); ?>
 
-                <?php echo form_error('movie-price'); ?>
-                <?php echo custom_form_input('Ticket Price', [
-                    'name'          => 'movie-price',
-                    'class'         => 'form-control',
-                    'placeholder'   => '00.00',
-                    'value'         => $movie['price'] ?: set_value('movie-price')
-                ]); ?>
-
-                <img src="<?php echo base_url($movie['image']); ?>" alt="" class="d-block w-100 mb-3">
+                <img src="<?php echo base_url($movie['image']); ?>" alt="" class="d-block w-25 mb-3">
 
                 <?php echo form_error('movie-image'); ?>
                 <?php echo custom_form_upload('Choose Image', [
@@ -99,4 +94,5 @@
             </div>
         </div>
     </div>
+  </div>
 <?php echo form_close(); ?>
